@@ -24,7 +24,6 @@ import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -48,8 +47,8 @@ public class ProxyApplication extends Application {
             dexPath=dex.getAbsolutePath();
             libPath=lib.getAbsolutePath();
 
-            apkFileName=dex.getAbsolutePath()+File.separator+"shell.apk";
-            File dexFile=new File(apkFileName);
+            apkFileName = dex.getAbsolutePath()+File.separator+"shell.apk";
+            File dexFile = new File(apkFileName);
             dexFile.createNewFile();
 
             byte[] dexData = readDexFileFromApk();
@@ -63,13 +62,14 @@ public class ProxyApplication extends Application {
             );
 
             String packageName = getPackageName();
-            ArrayMap packages= (ArrayMap) RefinvokeMethod.getField(
+            final ArrayMap<?, ?> packages = (ArrayMap<?, ?>) RefinvokeMethod.getField(
                     "android.app.ActivityThread",
                     activityThreadObject,
                     "mPackages"
             );
 
-            WeakReference weakReference= (WeakReference) packages.get(packageName);
+            assert packages != null;
+            WeakReference<?> weakReference = (WeakReference<?>) packages.get(packageName);
             ClassLoader classLoader = (ClassLoader) RefinvokeMethod.getField(
                     "android.app.LoadedApk",
                     weakReference.get(),
@@ -82,7 +82,7 @@ public class ProxyApplication extends Application {
                     libPath,
                     classLoader
             );
-            // 把当前进程的DexClassLoader设置为源APK的DexClassLoader
+
             RefinvokeMethod.setField(
                     "android.app.LoadedApk",
                     "mClassLoader",
@@ -91,7 +91,7 @@ public class ProxyApplication extends Application {
             );
 
             try {
-                Object objectMain = dexClassLoader.loadClass("com.example.sourceapk.MainActivity");
+                dexClassLoader.loadClass("com.example.sourceapk.MainActivity");
                 Log.i(TAG,"MainActivity类加载完毕");
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
@@ -109,7 +109,7 @@ public class ProxyApplication extends Application {
         loadResources(apkFileName);
         Log.i(TAG,"进入onCreate方法");
         String applicationName="";
-        ApplicationInfo ai=null;
+        ApplicationInfo ai;
 
         try {
             ai=getPackageManager().getApplicationInfo(
@@ -150,24 +150,29 @@ public class ProxyApplication extends Application {
                 activityThreadObj,
                 "mInitialApplication"
         );
-        ArrayList<Application> mAllApplications= (ArrayList<Application>) RefinvokeMethod.getField(
+        ArrayList<?> mAllApplications= (ArrayList<?>) RefinvokeMethod.getField(
                 "android.app.ActivityThread",
                 activityThreadObj,
                 "mAllApplications"
         );
+
+        assert mAllApplications != null;
         mAllApplications.remove(mInitApplication);
         ApplicationInfo mApplicationInfo= (ApplicationInfo) RefinvokeMethod.getField(
                 "android.app.LoadedApk",
                 info,
                 "mApplicationInfo"
         );
-        ApplicationInfo appinfo= (ApplicationInfo) RefinvokeMethod.getField(
+        ApplicationInfo appInfo= (ApplicationInfo) RefinvokeMethod.getField(
                 "android.app.ActivityThread$AppBindData",
                 mBoundApplication,
                 "appInfo"
         );
+
+        assert mApplicationInfo != null;
+        assert appInfo != null;
         mApplicationInfo.className = applicationName;
-        appinfo.className = applicationName;
+        appInfo.className = applicationName;
 
         // 执行makeApplication(false,null)
         Application app= (Application) RefinvokeMethod.invokeMethod(
@@ -184,16 +189,15 @@ public class ProxyApplication extends Application {
                 app
         );
 
-        ArrayMap mProviderMap= (ArrayMap) RefinvokeMethod.getField(
+        ArrayMap<?, ?> mProviderMap= (ArrayMap<?, ?>) RefinvokeMethod.getField(
                 "android.app.ActivityThread",
                 activityThreadObj,
                 "mProviderMap"
         );
-        Iterator iterator=mProviderMap.values().iterator();
 
-        while (iterator.hasNext()){
-            Object mProviderClientRecord=iterator.next();
-            Object mLocalProvider=RefinvokeMethod.getField(
+        assert mProviderMap != null;
+        for (Object mProviderClientRecord : mProviderMap.values()) {
+            Object mLocalProvider = RefinvokeMethod.getField(
                     "android.app.ActivityThread$ProviderClientRecord",
                     mProviderClientRecord,
                     "mLocalProvider"
@@ -205,20 +209,20 @@ public class ProxyApplication extends Application {
                     app
             );
         }
-
-        app.onCreate();
+        if (app != null)
+            app.onCreate();
     }
 
-    private void splitPayloadFromDex(byte[] dexdata) throws IOException {
-        int len=dexdata.length;
-        byte[] apklen=new byte[4];
-        System.arraycopy(dexdata,len-4,apklen,0,4);
+    private void splitPayloadFromDex(byte[] dexData) throws IOException {
+        int len=dexData.length;
+        byte[] apkLen = new byte[4];
+        System.arraycopy(dexData,len-4,apkLen,0,4);
 
-        ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(apklen);
+        ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(apkLen);
         DataInputStream dataInputStream = new DataInputStream(byteArrayInputStream);
         int readInt = dataInputStream.readInt();
         byte[] apk = new byte[readInt];
-        System.arraycopy(dexdata,len-4-readInt,apk,0,readInt);
+        System.arraycopy(dexData,len-4-readInt,apk,0,readInt);
 
         decrypt(apk);
 
@@ -227,7 +231,7 @@ public class ProxyApplication extends Application {
         fileOutputStream.write(apk);
         fileOutputStream.close();
 
-        ZipInputStream zipInputStream=
+        ZipInputStream zipInputStream =
                 new ZipInputStream(
                         new BufferedInputStream(
                                 new FileInputStream(file)));
@@ -241,10 +245,11 @@ public class ProxyApplication extends Application {
 
             String name = zipEntry.getName();
             if (name.startsWith("lib/") && name.endsWith(".so")){
-                File storeFile=new File(libPath+"/"+ name.substring(name.lastIndexOf("/")));
+                File storeFile = new File(libPath+"/"+ name.substring(name.lastIndexOf("/")));
+
                 storeFile.createNewFile();
-                FileOutputStream fos=new FileOutputStream(storeFile);
-                byte[] byteArray=new byte[1024];
+                FileOutputStream fos = new FileOutputStream(storeFile);
+                byte[] byteArray = new byte[1024];
                 while (true){
                     int i = zipInputStream.read(byteArray);
                     if (i==-1){
@@ -301,10 +306,10 @@ public class ProxyApplication extends Application {
 
     protected void loadResources(String dexPath){
         try {
-            AssetManager manager=AssetManager.class.newInstance();
-            Method method=manager.getClass().getMethod("addAssetPath",String.class);
+            AssetManager manager = AssetManager.class.newInstance();
+            Method method = manager.getClass().getMethod("addAssetPath",String.class);
             method.invoke(manager,dexPath);
-            assetManager=manager;
+            assetManager = manager;
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -323,11 +328,11 @@ public class ProxyApplication extends Application {
 
     @Override
     public Resources getResources() {
-        return resources==null?super.getResources():resources;
+        return resources == null?super.getResources():resources;
     }
 
     @Override
     public Resources.Theme getTheme() {
-        return theme==null?super.getTheme():theme;
+        return theme == null?super.getTheme():theme;
     }
 }
