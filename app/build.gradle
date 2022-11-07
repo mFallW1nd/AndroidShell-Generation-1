@@ -26,14 +26,45 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+    this.project.afterEvaluate { project ->
+        project.tasks.each { task ->
+            if (task.toString().contains("assemble")) {
+                task.doLast {
+                    android.applicationVariants.all { variant ->
+                        if (variant.buildType.name == "debug"){
+                            def filename = "app-${variant.buildType.name}.apk"
+                            def workFolder = "${project.getProjectDir().path}/build/outputs/apk/${variant.buildType.name}"
+                            def utilFolder = "${project.getProjectDir().path}/utils/"
+                            try {
+                                copy {
+                                    from "${utilFolder}/"
+                                    into "${workFolder}/"
+                                }
+                                exec {
+                                    workingDir "${workFolder}"
+                                    commandLine "cmd", "/c",
+                                    "python",
+                                    "mergeDex.py",
+                                    "-f ${filename}",
+                                    "-d output",
+                                    "-b ${variant.buildType.name}"
+                                }
+                            } catch (Exception e) {
+                                print e
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 dependencies {
-
-    implementation 'androidx.appcompat:appcompat:1.1.0'
-    implementation 'com.google.android.material:material:1.1.0'
-    implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
-    testImplementation 'junit:junit:4.+'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.1'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
+    implementation 'androidx.appcompat:appcompat:1.3.0'
+    implementation 'com.google.android.material:material:1.4.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
+    testImplementation 'junit:junit:'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.3'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
 }

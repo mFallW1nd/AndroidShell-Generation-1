@@ -182,6 +182,7 @@ public class ProxyApplication extends Application {
                 new Class[]{boolean.class, Instrumentation.class},
                 new Object[]{false,null}
         );
+
         RefinvokeMethod.setField(
                 "android.app.ActivityThread",
                 "mInitialApplication",
@@ -284,6 +285,7 @@ public class ProxyApplication extends Application {
                 zipInputStream.close();
                 break;
             }
+
             if (zipEntry.getName().equals("classes.dex")){
                 byte[] bytes=new byte[1024];
                 while (true){
