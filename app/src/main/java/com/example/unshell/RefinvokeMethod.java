@@ -4,7 +4,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 public class RefinvokeMethod {
-    public static Object invokeStaticMethod(String class_name,String method_name,Class[] classes,Object[] objects){
+    public static Object invokeStaticMethod(String class_name,String method_name,Class<?>[] classes,Object[] objects){
         try {
             Class<?> aClass = Class.forName(class_name);
             Method method = aClass.getMethod(method_name, classes);
@@ -15,7 +15,7 @@ public class RefinvokeMethod {
         }
     }
 
-    public static Object invokeMethod(String class_name,String method_name,Object obj,Class[] classes,Object[] objects){
+    public static Object invokeMethod(String class_name,String method_name,Object obj,Class<?>[] classes,Object[] objects){
         try {
             Class<?> aClass = Class.forName(class_name);
             Method method = aClass.getMethod(method_name, classes);

@@ -127,17 +127,19 @@ public class ProxyApplication extends Application {
                 new Class[]{},
                 new Object[]{}
         );
+
         Object mBoundApplication=RefinvokeMethod.getField(
                 "android.app.ActivityThread",
                 activityThreadObj,
                 "mBoundApplication"
         );
+
         Object info=RefinvokeMethod.getField(
                 "android.app.ActivityThread$AppBindData",
                 mBoundApplication,
                 "info"
         );
-        // 将当前进程的mApplication设置为null
+
         RefinvokeMethod.setField(
                 "android.app.LoadedApk",
                 "mApplication",
@@ -150,6 +152,7 @@ public class ProxyApplication extends Application {
                 activityThreadObj,
                 "mInitialApplication"
         );
+
         ArrayList<?> mAllApplications= (ArrayList<?>) RefinvokeMethod.getField(
                 "android.app.ActivityThread",
                 activityThreadObj,
@@ -163,6 +166,7 @@ public class ProxyApplication extends Application {
                 info,
                 "mApplicationInfo"
         );
+
         ApplicationInfo appInfo= (ApplicationInfo) RefinvokeMethod.getField(
                 "android.app.ActivityThread$AppBindData",
                 mBoundApplication,
@@ -174,7 +178,7 @@ public class ProxyApplication extends Application {
         mApplicationInfo.className = applicationName;
         appInfo.className = applicationName;
 
-        // 执行makeApplication(false,null)
+        // makeApplication(false,null)
         Application app= (Application) RefinvokeMethod.invokeMethod(
                 "android.app.LoadedApk",
                 "makeApplication",
@@ -223,8 +227,8 @@ public class ProxyApplication extends Application {
         DataInputStream dataInputStream = new DataInputStream(byteArrayInputStream);
         int readInt = dataInputStream.readInt();
         byte[] apk = new byte[readInt];
-        System.arraycopy(dexData,len-4-readInt,apk,0,readInt);
 
+        System.arraycopy(dexData,len-4-readInt,apk,0,readInt);
         decrypt(apk);
 
         File file = new File(apkFileName);
@@ -247,8 +251,8 @@ public class ProxyApplication extends Application {
             String name = zipEntry.getName();
             if (name.startsWith("lib/") && name.endsWith(".so")){
                 File storeFile = new File(libPath+"/"+ name.substring(name.lastIndexOf("/")));
-
                 storeFile.createNewFile();
+
                 FileOutputStream fos = new FileOutputStream(storeFile);
                 byte[] byteArray = new byte[1024];
                 while (true){
@@ -325,16 +329,16 @@ public class ProxyApplication extends Application {
 
     @Override
     public AssetManager getAssets() {
-        return assetManager == null?super.getAssets():assetManager;
+        return assetManager == null ? super.getAssets() : assetManager;
     }
 
     @Override
     public Resources getResources() {
-        return resources == null?super.getResources():resources;
+        return resources == null ? super.getResources() : resources;
     }
 
     @Override
     public Resources.Theme getTheme() {
-        return theme == null?super.getTheme():theme;
+        return theme == null ? super.getTheme() : theme;
     }
 }
