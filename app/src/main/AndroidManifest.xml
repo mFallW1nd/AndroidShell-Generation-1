@@ -11,9 +11,9 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.AppCompat.DayNight.DarkActionBar">
-        <meta-data android:name="ApplicationName" android:value="com.example.activity_travel.MainActivity.MyApplication"/>
+        <meta-data android:name="ApplicationName" android:value="com.example.sourceapk.MyApplication"/>
         <activity
-            android:name="com.example.activity_travel.MainActivity"
+            android:name="com.example.sourceapk.MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

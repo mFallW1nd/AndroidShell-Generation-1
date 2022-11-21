@@ -91,7 +91,7 @@ public class ProxyApplication extends Application {
             );
 
             try {
-                dexClassLoader.loadClass("com.example.activity_travel.MainActivity");
+                dexClassLoader.loadClass("com.example.sourceapk.MainActivity");
                 Log.i(TAG,"MainActivity类加载完毕");
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
@@ -109,52 +109,52 @@ public class ProxyApplication extends Application {
         loadResources(apkFileName);
         Log.i(TAG,"进入onCreate方法");
         String applicationName="";
-        ApplicationInfo applicationInfo;
+        ApplicationInfo ai;
 
         try {
-            applicationInfo =getPackageManager().getApplicationInfo(
+            ai=getPackageManager().getApplicationInfo(
                     getPackageName(),
                     PackageManager.GET_META_DATA
             );
-            applicationName= applicationInfo.metaData.getString("ApplicationName");
+            applicationName=ai.metaData.getString("ApplicationName");
         } catch (PackageManager.NameNotFoundException e) {
             e.printStackTrace();
         }
 
         Object activityThreadObj=RefinvokeMethod.invokeStaticMethod(
-                "android.applicationInfo.ActivityThread",
+                "android.app.ActivityThread",
                 "currentActivityThread",
                 new Class[]{},
                 new Object[]{}
         );
 
         Object mBoundApplication=RefinvokeMethod.getField(
-                "android.applicationInfo.ActivityThread",
+                "android.app.ActivityThread",
                 activityThreadObj,
                 "mBoundApplication"
         );
 
         Object info=RefinvokeMethod.getField(
-                "android.applicationInfo.ActivityThread$AppBindData",
+                "android.app.ActivityThread$AppBindData",
                 mBoundApplication,
                 "info"
         );
 
         RefinvokeMethod.setField(
-                "android.applicationInfo.LoadedApk",
+                "android.app.LoadedApk",
                 "mApplication",
                 info,
                 null
         );
 
         Object mInitApplication=RefinvokeMethod.getField(
-                "android.applicationInfo.ActivityThread",
+                "android.app.ActivityThread",
                 activityThreadObj,
                 "mInitialApplication"
         );
 
-        ArrayList<?> mAllApplications=(ArrayList<?>) RefinvokeMethod.getField(
-                "android.applicationInfo.ActivityThread",
+        ArrayList<?> mAllApplications= (ArrayList<?>) RefinvokeMethod.getField(
+                "android.app.ActivityThread",
                 activityThreadObj,
                 "mAllApplications"
         );
@@ -162,13 +162,13 @@ public class ProxyApplication extends Application {
         assert mAllApplications != null;
         mAllApplications.remove(mInitApplication);
         ApplicationInfo mApplicationInfo= (ApplicationInfo) RefinvokeMethod.getField(
-                "android.applicationInfo.LoadedApk",
+                "android.app.LoadedApk",
                 info,
                 "mApplicationInfo"
         );
 
         ApplicationInfo appInfo= (ApplicationInfo) RefinvokeMethod.getField(
-                "android.applicationInfo.ActivityThread$AppBindData",
+                "android.app.ActivityThread$AppBindData",
                 mBoundApplication,
                 "appInfo"
         );
@@ -180,7 +180,7 @@ public class ProxyApplication extends Application {
 
         // makeApplication(false,null)
         Application app= (Application) RefinvokeMethod.invokeMethod(
-                "android.applicationInfo.LoadedApk",
+                "android.app.LoadedApk",
                 "makeApplication",
                 info,
                 new Class[]{boolean.class, Instrumentation.class},
@@ -188,14 +188,14 @@ public class ProxyApplication extends Application {
         );
 
         RefinvokeMethod.setField(
-                "android.applicationInfo.ActivityThread",
+                "android.app.ActivityThread",
                 "mInitialApplication",
                 activityThreadObj,
                 app
         );
 
         ArrayMap<?, ?> mProviderMap= (ArrayMap<?, ?>) RefinvokeMethod.getField(
-                "android.applicationInfo.ActivityThread",
+                "android.app.ActivityThread",
                 activityThreadObj,
                 "mProviderMap"
         );
@@ -203,7 +203,7 @@ public class ProxyApplication extends Application {
         assert mProviderMap != null;
         for (Object mProviderClientRecord : mProviderMap.values()) {
             Object mLocalProvider = RefinvokeMethod.getField(
-                    "android.applicationInfo.ActivityThread$ProviderClientRecord",
+                    "android.app.ActivityThread$ProviderClientRecord",
                     mProviderClientRecord,
                     "mLocalProvider"
             );
